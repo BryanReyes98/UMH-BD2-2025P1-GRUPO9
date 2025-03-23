@@ -1,0 +1,9 @@
+-- insercion de datos 
+INSERT INTO clientes (nombre, correo, telefono) 
+VALUES ('Juan Pérez', 'juan.perez@email.com', '555-1234');
+INSERT INTO tarjetas (id_cliente, numero_tarjeta, limite_credito, saldo_actual) 
+VALUES (1, '1234-5678-9012-3456', 50000.00, 10000.00);
+INSERT INTO transacciones (id_tarjeta, fecha, descripcion, tipo, monto) 
+VALUES (1, NOW(), 'Compra en tienda', 'cargo', 1500.00);
+INSERT INTO estado_cuenta (id_tarjeta, fecha_inicio, fecha_fin, saldo_anterior, saldo_actual) 
+VALUES (1, '2025-03-01', '2025-03-31', 12000.00, 10000.00);
