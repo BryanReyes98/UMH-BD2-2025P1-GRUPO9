@@ -1,0 +1,48 @@
+DELIMITER $$
+
+-- Procedimiento para actualizar los datos de un cliente
+CREATE PROCEDURE actualizar_cliente(
+    IN p_id_cliente INT,
+    IN p_nombre VARCHAR(100),
+    IN p_correo VARCHAR(100),
+    IN p_telefono VARCHAR(15)
+)
+BEGIN
+    UPDATE clientes
+    SET nombre = p_nombre, 
+        correo = p_correo, 
+        telefono = p_telefono
+    WHERE id_cliente = p_id_cliente;
+END $$
+
+DELIMITER ;
+
+-- Procedimiento para actualizar una tarjeta
+DELIMITER //
+CREATE PROCEDURE actualizar_tarjeta(
+    IN p_id_tarjeta INT,
+    IN p_limite_credito DECIMAL(10,2),
+    IN p_saldo_actual DECIMAL(10,2)
+)
+BEGIN
+    UPDATE tarjetas
+    SET limite_credito = p_limite_credito, saldo_actual = p_saldo_actual
+    WHERE id_tarjeta = p_id_tarjeta;
+END //
+DELIMITER ;
+
+-- Procedimiento para actualizar una transacción
+DELIMITER //
+CREATE PROCEDURE actualizar_transaccion(
+    IN p_id_transaccion INT,
+    IN p_fecha DATETIME,
+    IN p_descripcion VARCHAR(255),
+    IN p_tipo ENUM('cargo', 'abono'),
+    IN p_monto DECIMAL(10,2)
+)
+BEGIN
+    UPDATE transacciones
+    SET fecha = p_fecha, descripcion = p_descripcion, tipo = p_tipo, monto = p_monto
+    WHERE id_transaccion = p_id_transaccion;
+END //
+DELIMITER ;
