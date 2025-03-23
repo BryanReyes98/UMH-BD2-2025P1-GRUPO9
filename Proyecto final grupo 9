@@ -1,0 +1,184 @@
+-- Base de datos
+USE proyecto_final;
+
+
+-- Crear tablas
+CREATE TABLE clientes (
+    id_cliente INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    correo VARCHAR(100) UNIQUE NOT NULL,
+    telefono VARCHAR(15)
+);
+
+CREATE TABLE tarjetas (
+    id_tarjeta INT AUTO_INCREMENT PRIMARY KEY,
+    id_cliente INT NOT NULL,
+    numero_tarjeta VARCHAR(20) UNIQUE NOT NULL,
+    limite_credito DECIMAL(10,2) NOT NULL,
+    saldo_actual DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (id_cliente) REFERENCES clientes(id_cliente)
+);
+CREATE TABLE transacciones (
+    id_transaccion INT AUTO_INCREMENT PRIMARY KEY,
+    id_tarjeta INT NOT NULL,
+    fecha DATETIME NOT NULL,
+    descripcion VARCHAR(255),
+    tipo ENUM('cargo', 'abono') NOT NULL,
+    monto DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (id_tarjeta) REFERENCES tarjetas(id_tarjeta)
+);
+
+CREATE TABLE estado_cuenta (
+    id_estado INT AUTO_INCREMENT PRIMARY KEY,
+    id_tarjeta INT NOT NULL,
+    fecha_inicio DATE NOT NULL,
+    fecha_fin DATE NOT NULL,
+    saldo_anterior DECIMAL(10,2) NOT NULL,
+    saldo_actual DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (id_tarjeta) REFERENCES tarjetas(id_tarjeta)
+);
+
+-- insercion de datos 
+INSERT INTO clientes (nombre, correo, telefono) 
+VALUES ('Juan Pérez', 'juan.perez@email.com', '555-1234');
+INSERT INTO tarjetas (id_cliente, numero_tarjeta, limite_credito, saldo_actual) 
+VALUES (1, '1234-5678-9012-3456', 50000.00, 10000.00);
+INSERT INTO transacciones (id_tarjeta, fecha, descripcion, tipo, monto) 
+VALUES (1, NOW(), 'Compra en tienda', 'cargo', 1500.00);
+INSERT INTO estado_cuenta (id_tarjeta, fecha_inicio, fecha_fin, saldo_anterior, saldo_actual) 
+VALUES (1, '2025-03-01', '2025-03-31', 12000.00, 10000.00);
+
+
+
+
+
+
+
+
+DELIMITER $$
+
+-- Procedimiento para actualizar los datos de un cliente
+CREATE PROCEDURE actualizar_cliente(
+    IN p_id_cliente INT,
+    IN p_nombre VARCHAR(100),
+    IN p_correo VARCHAR(100),
+    IN p_telefono VARCHAR(15)
+)
+BEGIN
+    UPDATE clientes
+    SET nombre = p_nombre, 
+        correo = p_correo, 
+        telefono = p_telefono
+    WHERE id_cliente = p_id_cliente;
+END $$
+
+DELIMITER ;
+
+-- Procedimiento para actualizar una tarjeta
+DELIMITER //
+CREATE PROCEDURE actualizar_tarjeta(
+    IN p_id_tarjeta INT,
+    IN p_limite_credito DECIMAL(10,2),
+    IN p_saldo_actual DECIMAL(10,2)
+)
+BEGIN
+    UPDATE tarjetas
+    SET limite_credito = p_limite_credito, saldo_actual = p_saldo_actual
+    WHERE id_tarjeta = p_id_tarjeta;
+END //
+DELIMITER ;
+
+-- Procedimiento para actualizar una transacción
+DELIMITER //
+CREATE PROCEDURE actualizar_transaccion(
+    IN p_id_transaccion INT,
+    IN p_fecha DATETIME,
+    IN p_descripcion VARCHAR(255),
+    IN p_tipo ENUM('cargo', 'abono'),
+    IN p_monto DECIMAL(10,2)
+)
+BEGIN
+    UPDATE transacciones
+    SET fecha = p_fecha, descripcion = p_descripcion, tipo = p_tipo, monto = p_monto
+    WHERE id_transaccion = p_id_transaccion;
+END //
+DELIMITER ;
+
+-- Prueba de procedimientos 
+CALL actualizar_cliente(1, 'Carlos López', 'carlos.lopez@email.com', '555-9876');
+CALL actualizar_tarjeta(1, 60000.00, 9500.00);
+CALL actualizar_transaccion(1, '2025-03-21 14:30:00', 'Pago en línea', 'abono', 2000.00);
+
+
+
+
+
+-- Función para calcular el saldo disponible de una tarjeta
+DELIMITER $$
+CREATE FUNCTION calcular_saldo_disponible(p_id_tarjeta INT) 
+RETURNS DECIMAL(10,2) 
+DETERMINISTIC
+BEGIN
+    DECLARE v_limite_credito DECIMAL(10,2);
+    DECLARE v_saldo_actual DECIMAL(10,2);
+
+    SELECT limite_credito, saldo_actual
+    INTO v_limite_credito, v_saldo_actual
+    FROM tarjetas
+    WHERE id_tarjeta = p_id_tarjeta;
+
+    RETURN v_limite_credito - v_saldo_actual;
+END $$
+DELIMITER ;
+
+-- Función para contar el número de transacciones de una tarjeta
+DELIMITER $$
+CREATE FUNCTION contar_transacciones(p_id_tarjeta INT) 
+RETURNS INT 
+DETERMINISTIC
+BEGIN
+    DECLARE v_total INT;
+
+    SELECT COUNT(*)
+    INTO v_total
+    FROM transacciones
+    WHERE id_tarjeta = p_id_tarjeta;
+
+    RETURN v_total;
+END $$
+DELIMITER ;
+
+-- Función para calcular el total de cargos de una tarjeta
+DELIMITER $$
+CREATE FUNCTION total_cargos(p_id_tarjeta INT) 
+RETURNS DECIMAL(10,2) 
+DETERMINISTIC
+BEGIN
+    DECLARE v_total DECIMAL(10,2);
+
+    SELECT IFNULL(SUM(monto), 0)
+    INTO v_total
+    FROM transacciones
+    WHERE id_tarjeta = p_id_tarjeta AND tipo = 'cargo';
+
+    RETURN v_total;
+END $$
+DELIMITER ;
+
+
+
+
+
+-- Prueba de las funciones 
+
+-- Funcion calculo del saldo disponible:
+
+SELECT calcular_saldo_disponible(1) AS saldo_disponible;
+
+-- Función contar transacciones:
+
+SELECT contar_transacciones(1) AS total_transacciones;
+
+-- Funcion monto total de los cargos (compras o pagos) realizados: 
+
+SELECT total_cargos(1) AS total_monto_cargos;
