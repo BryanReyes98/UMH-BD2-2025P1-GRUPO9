@@ -1,2 +1,3 @@
 -- Base de datos
 CREATE SCHEMA proyecto_final;
+USE proyecto_final;
