@@ -1,6 +1,6 @@
 -- Base de datos
-CREATE SCHEMA proyecto_final;
-
+CREATE DATABASE proyecto_final;
+use proyecto_final;
 
 -- Crear tablas
 CREATE TABLE clientes (
