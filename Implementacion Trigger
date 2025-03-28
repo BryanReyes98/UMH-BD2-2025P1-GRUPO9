@@ -1,0 +1,35 @@
+CREATE TABLE auditoria_tarjetas (
+    id_auditoria INT AUTO_INCREMENT PRIMARY KEY,
+    id_tarjeta INT NOT NULL,
+    tipo_cambio VARCHAR(50) NOT NULL,
+    valor_anterior DECIMAL(10,2) NOT NULL,
+    valor_actual DECIMAL(10,2) NOT NULL,
+    fecha_cambio DATETIME NOT NULL,
+    FOREIGN KEY (id_tarjeta) REFERENCES tarjetas(id_tarjeta)
+);
+
+
+DELIMITER //
+
+CREATE TRIGGER auditoria_actualizacion_tarjeta
+AFTER UPDATE ON tarjetas
+FOR EACH ROW
+BEGIN
+    -- Registrar cambios en el límite de crédito
+    IF OLD.limite_credito != NEW.limite_credito THEN
+        INSERT INTO auditoria_tarjetas (id_tarjeta, tipo_cambio, valor_anterior, valor_actual, fecha_cambio)
+        VALUES (NEW.id_tarjeta, 'Limite Crédito', OLD.limite_credito, NEW.limite_credito, NOW());
+    END IF;
+
+    -- Registrar cambios en el saldo actual
+    IF OLD.saldo_actual != NEW.saldo_actual THEN
+        INSERT INTO auditoria_tarjetas (id_tarjeta, tipo_cambio, valor_anterior, valor_actual, fecha_cambio)
+        VALUES (NEW.id_tarjeta, 'Saldo Actual', OLD.saldo_actual, NEW.saldo_actual, NOW());
+    END IF;
+END //
+
+DELIMITER ;
+
+UPDATE tarjetas 
+SET limite_credito = 55000.00, saldo_actual = 9000.00
+WHERE id_tarjeta = 1;
